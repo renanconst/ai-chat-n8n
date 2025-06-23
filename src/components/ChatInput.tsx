@@ -4,13 +4,15 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { useState } from 'react'
 import { Send } from 'lucide-react'
+import { useChat } from './context/ChatContext'
 
 export default function ChatInput() {
+  const { handleSend } = useChat()
+
   const [message, setMessage] = useState('')
 
-  const handleSend = () => {
-    if (!message.trim()) return
-    console.log('Enviando mensagem:', message)
+  const handleSendMessage = () => {
+    handleSend(message)
     setMessage('')
   }
 
@@ -23,9 +25,9 @@ export default function ChatInput() {
           placeholder="Digite sua pergunta..."
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+          onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
         />
-        <Button className='bg-blue-700 hover:bg-blue-800 cursor-pointer' onClick={handleSend}><Send className='h-4 w-4 text-white dark:text-white' /></Button>
+        <Button className='bg-blue-700 hover:bg-blue-800 cursor-pointer' onClick={handleSendMessage} disabled={message.trim().length <= 0}><Send className='h-4 w-4 text-white dark:text-white' /></Button>
       </div>
     </form>
   )
