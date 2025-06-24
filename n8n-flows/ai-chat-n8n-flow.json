@@ -1,0 +1,220 @@
+{
+  "name": "Ai-Chat",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Você é um assistente prestativo. O usuário fez a seguinte pergunta: {{ $json.question }}\n\nUse as seguintes informações para responder à pergunta.\nInformações fornecidas: {{ $json.infos }}\n\nResponda de forma concisa e útil, baseando-se apenas nas informações fornecidas, se você não achar a resposta nos dados você pode dizer que não sabe.\n\n",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        520,
+        -100
+      ],
+      "id": "ecaeab09-3837-4da7-8a01-6bced61134bb",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "/ai-chat",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -240,
+        -100
+      ],
+      "id": "c75daac0-fb57-4bce-89ba-5853a901621f",
+      "name": "Webhook",
+      "webhookId": "a481ba65-3aae-4a4f-8e63-c4e294566c45"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        -80,
+        -100
+      ],
+      "id": "3e08171f-203c-4af1-afd5-5e6c532d2730",
+      "name": "Read/Write Files from Disk"
+    },
+    {
+      "parameters": {
+        "operation": "fromJson",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        80,
+        -100
+      ],
+      "id": "45a64090-66b2-4505-a288-fa9fb5c5270e",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "05cb8dbd-0e44-4d7b-a431-fdc9781265f9",
+              "name": "question",
+              "value": "={{ $('Webhook').item.json.body }}",
+              "type": "string"
+            },
+            {
+              "id": "2383898c-8f64-4b74-83fe-c57f062b4669",
+              "name": "infos",
+              "value": "={{ $json.data }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        300,
+        -100
+      ],
+      "id": "08d27f7f-1f28-4dba-a91f-062bbc4767ab",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-1.5-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        520,
+        100
+      ],
+      "id": "28651a2d-3c50-4f78-acf9-9df4ce108367",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "zBomEWxpQgBHxnAx",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{$json.output}}\n",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        860,
+        -100
+      ],
+      "id": "d2fb6c66-63c9-4562-b462-f1e79947efe7",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "body": {
+            "message": "Quanto tempo demora pra um site ficar pronto?"
+          }
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "52c6a015-d2a7-4a97-9121-ec533850c364",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "9cdc3627a42992792a26c0acd638396e347293f69262c91181e47b80d0a6d66b"
+  },
+  "id": "JuyDdPB9Jpl71PXR",
+  "tags": []
+}
